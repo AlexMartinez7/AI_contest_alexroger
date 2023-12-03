@@ -201,8 +201,7 @@ class OffensiveReflexAgent(ReflexCaptureAgent):
                 opponent_state = successor.get_agent_state(opponent)
                 dist = self.get_maze_distance(actual_pos, opponent_state.get_position())
                 dists.append(dist)
-                
-            if len(dists)>0:
+            if len(dists):
                 features['invader_distance'] = min(dists)
             else:
                 features['invader_distance'] = 0
@@ -236,14 +235,12 @@ class OffensiveReflexAgent(ReflexCaptureAgent):
             else:
                 features['not_invader_dist'] = 0
 
-
-            
-
             # Compute distance to the nearest food
             if len(food_list) > 0:  # This should always be True,  but better safe than sorry
                 my_pos = successor.get_agent_state(self.index).get_position()
                 min_distance = min([self.get_maze_distance(my_pos, food) for food in food_list])
                 features['distance_to_food'] = min_distance
+
         return features
 
 
@@ -262,11 +259,11 @@ class OffensiveReflexAgent(ReflexCaptureAgent):
         score = self.get_score(game_state)
 
         if len(opponents_attackingUs) > 0: #if there's agents attacking us
-            return{'num_invaders':-100000, 'invader_distance': -5000, 'stop': -7000 }
+            return{'num_invaders':-100000, 'invader_distance': -6000, 'stop': -7000 }
         elif score > 0: #if the agent is winning
-            return{'stop': -2000, 'reverse': -100, 'not_invader_dist': -1000, 'on_defense': 100000}
+            return{'stop': -1000, 'reverse': -100, 'not_invader_dist': -800, 'on_defense': 100000}
         else:
-            return {'successor_score': 100, 'distance_to_food': -1, 'stop':-500, 'not_invader_dist':-300, 'attack':-1000}
+            return {'successor_score': 10000, 'distance_to_food': -1000, 'stop':-500, 'not_invader_dist':-300, 'attack':-1000}
 
 
 
@@ -305,7 +302,12 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
         rev = Directions.REVERSE[game_state.get_agent_state(self.index).configuration.direction]
         if action == rev: features['reverse'] = 1
 
+        if len(invaders) > 0: #if there are agents invading we transition to offensive mode
+            features['on_defense'] = 0
+            features['attack'] = 1
+
+
         return features
 
     def get_weights(self, game_state, action):
-        return {'num_invaders': -1000, 'on_defense': 100, 'invader_distance': -10, 'stop': -100, 'reverse': -2}
+        return {'num_invaders': -1000, 'on_defense': 100, 'attack': -1000, 'invader_distance': -10, 'stop': -100, 'reverse': -2}
